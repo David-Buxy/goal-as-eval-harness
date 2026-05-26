@@ -1,0 +1,7 @@
+interface:
+  display_name: "Goal Contract Builder"
+  short_description: "Build goals as eval harnesses"
+  default_prompt: "Use $goal-contract-builder to turn this task into a goal-as-eval-harness with trials, transcript capture, outcome probes, graders, and stop rules."
+
+policy:
+  allow_implicit_invocation: true
