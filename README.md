@@ -2,6 +2,8 @@
 
 `goal-contract-builder` is a Codex skill for writing goals as lightweight eval harnesses.
 
+中文说明见：[README.zh-CN.md](README.zh-CN.md)
+
 The central idea:
 
 > Build goals as eval harnesses.
