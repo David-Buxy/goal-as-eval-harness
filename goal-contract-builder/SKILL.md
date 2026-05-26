@@ -26,6 +26,19 @@ Every serious goal should answer:
 - What grader decides pass/fail or quality?
 - When should the agent iterate, block, degrade, or stop?
 
+## Codex `/goal` Length Budget
+
+When the goal will be pasted into Codex `/goal`, keep the executable goal under 4000 Chinese characters unless the user asks for a longer artifact.
+
+If the full harness is too long:
+
+- Put only the current goal in the `/goal` text.
+- Prefer concise bullets over long prose.
+- Keep future goals as names only, or omit them.
+- Move detailed rubrics, examples, and background into a linked/local artifact.
+- Preserve the essentials: intent, state before/after, completion semantics, trials, transcript capture, graders, pass/blocked/stop conditions.
+- Do not remove `completion_does_not_mean`; it prevents false completion.
+
 ## When To Use
 
 Use this skill when the user wants to:
