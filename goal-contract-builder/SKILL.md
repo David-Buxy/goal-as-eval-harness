@@ -72,6 +72,23 @@ If the desired state is unclear, ask one to three short questions before writing
 
 When a safe assumption is enough, state it instead of blocking.
 
+Before the final goal, produce an Alignment Draft:
+
+```markdown
+## Alignment Draft
+- Intended state change:
+- Completion means:
+- Completion does not mean:
+- Split recommendation:
+- Harness strength:
+- Eval dataset needed:
+- Risk confirmations needed:
+- Assumptions:
+- Questions:
+```
+
+Ask at most three questions when the draft has material uncertainty. If the user already gave enough context, continue with stated assumptions.
+
 ### 2. Decide Whether To Split
 
 Do not split just to create a plan. Split only when it improves evaluation.
@@ -90,7 +107,59 @@ Do not split when:
 - The subtasks are merely implementation steps inside one outcome.
 - Splitting would create artificial progress without changing what the user cares about.
 
-### 3. Write The Goal As A Harness
+### 3. Choose Harness Strength
+
+Pick the lightest harness that can honestly prove the goal.
+
+- `light`: one real trial, artifact/outcome check, concise transcript. Use for one-off tasks with clear completion.
+- `standard`: at least three trials or checks, transcript capture, basic programmatic or human grader. Use for reusable workflows, automation, or ambiguous tasks.
+- `deep`: five or more iterations, explicit eval dataset, multiple graders, stronger stop rules. Use for self-improving capabilities, model/agent quality, retrieval, classification, generation, or production reliability.
+
+Do not use `deep` to make simple tasks look sophisticated. Do not use `light` for a goal that claims a reusable capability improved.
+
+### 4. Decide Whether An Eval Dataset Is Needed
+
+Do not require an eval dataset for every goal. Require one when the goal claims reusable capability, quality improvement, model/agent performance, retrieval/classification/generation behavior, or production automation reliability.
+
+Use this shape when needed:
+
+```yaml
+eval_dataset:
+  required:
+  reason:
+  cases:
+    - id:
+      input:
+      expected_behavior:
+      scoring:
+      required_evidence:
+```
+
+For one-off implementation or document tasks, use outcome probes and checklists instead of a dataset.
+
+### 5. Check Risk Permissions
+
+If the goal may perform risky operations, require explicit user confirmation or mark the goal blocked/degraded.
+
+Common confirmations:
+
+- `production_write`
+- `external_send`
+- `credential_use`
+- `paid_api_or_cost`
+- `delete_or_overwrite_data`
+- `long_running_automation`
+- `public_publish`
+
+Record them as:
+
+```yaml
+requires_user_confirmation:
+  - production_write
+  - external_send
+```
+
+### 6. Write The Goal As A Harness
 
 Use this schema unless a project has a stricter local format:
 
@@ -107,6 +176,15 @@ split_decision:
   split_needed:
   reason:
   parent_goal:
+
+harness_strength:
+
+requires_user_confirmation:
+
+eval_dataset:
+  required:
+  reason:
+  cases:
 
 task:
   objective:
@@ -164,7 +242,7 @@ stop_conditions:
 handoff:
 ```
 
-### 4. Make Completion Semantics Explicit
+### 7. Make Completion Semantics Explicit
 
 Always include both sides:
 
@@ -178,7 +256,7 @@ completion_semantics:
 
 This prevents diagnostic work from being mistaken for capability recovery, and prevents a report from being mistaken for a working system.
 
-### 5. Require Real Trials For Capability Goals
+### 8. Require Real Trials For Capability Goals
 
 If the user wants a capability, not just an artifact, include a real trial plan.
 
@@ -191,7 +269,7 @@ For self-iterating agent work:
 
 Fast completion is acceptable only when the harness passes, not when the agent merely produced a document.
 
-### 6. Capture The Transcript
+### 9. Capture The Transcript
 
 Do not grade only the final answer. Require trace evidence when the path matters:
 
@@ -205,7 +283,7 @@ Do not grade only the final answer. Require trace evidence when the path matters
 
 The transcript does not need to be verbose, but it must be enough for another human or agent to verify the work.
 
-### 7. Choose Graders
+### 10. Choose Graders
 
 Use the narrowest reliable grader:
 
@@ -215,7 +293,7 @@ Use the narrowest reliable grader:
 
 Prefer programmatic checks for structure and state. Use LLM or human review for meaning and quality.
 
-### 8. Fix Misaligned Goals
+### 11. Fix Misaligned Goals
 
 Rewrite, question, or split goals that contain:
 
@@ -224,6 +302,9 @@ Rewrite, question, or split goals that contain:
 - No real trial for a capability claim.
 - No transcript capture.
 - No grader.
+- No interaction point when the user's completion semantics are unclear.
+- No eval dataset for a claimed reusable capability.
+- No risk confirmation for production writes, external sends, credential use, destructive actions, public publishing, or long-running automation.
 - No stop condition.
 - A hidden dependency on credentials, private data, external access, or human taste.
 - A claim that explains a problem but sounds like the problem was fixed.
@@ -241,6 +322,9 @@ Rewrite, question, or split goals that contain:
 - Completion means:
 - Completion does not mean:
 - Split decision:
+- Harness strength:
+- Eval dataset needed:
+- Risk confirmations needed:
 
 ## Recommended Goal
 
@@ -257,6 +341,15 @@ split_decision:
   split_needed:
   reason:
   parent_goal:
+
+harness_strength:
+
+requires_user_confirmation:
+
+eval_dataset:
+  required:
+  reason:
+  cases:
 
 task:
   objective:
@@ -328,6 +421,31 @@ split_decision:
   reason: >
     The immediate need is one capability harness. Source-specific recovery can be split later if a source remains blocked.
   parent_goal: public discussion discovery
+
+harness_strength: deep
+
+requires_user_confirmation: []
+
+eval_dataset:
+  required: true
+  reason: >
+    This goal claims a reusable retrieval capability, so one keyword is not enough to prove general behavior.
+  cases:
+    - id: primary_keyword
+      input: example keyword
+      expected_behavior: Find relevant public discussions for the intended meaning of the keyword.
+      scoring: Top results include stable references and relevance reasons.
+      required_evidence: JSON/Markdown output with source status and URLs.
+    - id: ambiguous_keyword
+      input: ambiguous keyword
+      expected_behavior: Separate intended meaning from unrelated uses of the same term.
+      scoring: Rejected results include disambiguation reasons.
+      required_evidence: rejected/candidate records with reasons.
+    - id: source_failure
+      input: primary keyword with one source unavailable
+      expected_behavior: Mark the source as channel_failed and continue with fallback sources.
+      scoring: channel_failed is not reported as no_discussion_found.
+      required_evidence: transcript records error type and fallback attempt.
 
 task:
   objective: >
