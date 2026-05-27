@@ -26,9 +26,9 @@ Every serious goal should answer:
 - What grader decides pass/fail or quality?
 - When should the agent iterate, block, degrade, or stop?
 
-## Codex `/goal` Length Budget
+## Codex `/goal` Length Limit
 
-When the goal will be pasted into Codex `/goal`, keep the executable goal under 4000 Chinese characters unless the user asks for a longer artifact.
+When the goal will be pasted into Codex `/goal`, the executable goal must stay under 4000 characters.
 
 If the full harness is too long:
 
@@ -91,7 +91,24 @@ Ask at most three questions when the draft has material uncertainty. If the user
 
 ### 2. Decide Whether To Split
 
-Do not split just to create a plan. Split only when it improves evaluation.
+Do not split just to create a plan. First break down the problem, then split only when it improves evaluation.
+
+Before deciding, produce a compact problem breakdown:
+
+```yaml
+problem_breakdown:
+  subproblems:
+    - id:
+      question:
+      why_it_matters:
+      can_validate_independently:
+      depends_on:
+      risk_if_skipped:
+  dependency_order:
+  recommended_goal_units:
+```
+
+Use plain language. The purpose is to see what the big request contains, what must happen first, and which pieces are worth turning into goals.
 
 Split when:
 
@@ -99,6 +116,7 @@ Split when:
 - Different parts require different graders or evidence.
 - Some parts require unavailable credentials, user decisions, or external systems.
 - One part is diagnostic but another requires capability recovery.
+- A subproblem can be validated independently and skipping it would make later work hollow.
 - A single goal would let the agent keep expanding without a clear stop rule.
 
 Do not split when:
@@ -106,6 +124,14 @@ Do not split when:
 - One harness can clearly define task, trials, outcome probes, graders, and stop conditions.
 - The subtasks are merely implementation steps inside one outcome.
 - Splitting would create artificial progress without changing what the user cares about.
+
+Good goal units usually satisfy:
+
+- They create a clear state change.
+- They can be independently checked.
+- They unblock later work.
+- They have their own evidence.
+- They are small enough for one `/goal` run.
 
 ### 3. Choose Harness Strength
 
@@ -178,6 +204,11 @@ split_decision:
   split_needed:
   reason:
   parent_goal:
+
+problem_breakdown:
+  subproblems:
+  dependency_order:
+  recommended_goal_units:
 
 harness_strength:
 
@@ -323,6 +354,7 @@ Rewrite, question, or split goals that contain:
 - Desired state:
 - Completion means:
 - Completion does not mean:
+- Problem breakdown:
 - Split decision:
 - Harness strength:
 - Eval dataset needed:
@@ -343,6 +375,11 @@ split_decision:
   split_needed:
   reason:
   parent_goal:
+
+problem_breakdown:
+  subproblems:
+  dependency_order:
+  recommended_goal_units:
 
 harness_strength:
 
@@ -423,6 +460,36 @@ split_decision:
   reason: >
     The immediate need is one capability harness. Source-specific recovery can be split later if a source remains blocked.
   parent_goal: public discussion discovery
+
+problem_breakdown:
+  subproblems:
+    - id: source_access
+      question: Which public sources can be queried from the current environment?
+      why_it_matters: Failed sources must not be confused with no discussion.
+      can_validate_independently: true
+      depends_on: []
+      risk_if_skipped: A single blocked source can falsely block the whole capability.
+    - id: relevance_filtering
+      question: Can the workflow separate intended keyword meaning from unrelated uses?
+      why_it_matters: Ambiguous keywords can produce misleading matches.
+      can_validate_independently: true
+      depends_on:
+        - source_access
+      risk_if_skipped: The workflow may return noisy results as matched.
+    - id: output_artifacts
+      question: Are results and failures written to reusable artifacts?
+      why_it_matters: The capability must be rerunnable and reviewable.
+      can_validate_independently: true
+      depends_on:
+        - source_access
+        - relevance_filtering
+      risk_if_skipped: The agent may only produce an unreproducible report.
+  dependency_order:
+    - source_access
+    - relevance_filtering
+    - output_artifacts
+  recommended_goal_units:
+    - Keep these together for the first harness because they jointly prove the minimum retrieval capability.
 
 harness_strength: deep
 
