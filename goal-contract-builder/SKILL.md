@@ -141,6 +141,8 @@ For one-off implementation or document tasks, use outcome probes and checklists 
 
 If the goal may perform risky operations, require explicit user confirmation or mark the goal blocked/degraded.
 
+Risk confirmation overrides completeness. Even if the user provides a complete goal harness, do not execute risky operations until the user explicitly confirms them.
+
 Common confirmations:
 
 - `production_write`
@@ -304,7 +306,7 @@ Rewrite, question, or split goals that contain:
 - No grader.
 - No interaction point when the user's completion semantics are unclear.
 - No eval dataset for a claimed reusable capability.
-- No risk confirmation for production writes, external sends, credential use, destructive actions, public publishing, or long-running automation.
+- No risk confirmation for production writes, external sends, credential use, destructive actions, public publishing, or long-running automation. Risk confirmation is required even when the rest of the goal is fully specified.
 - No stop condition.
 - A hidden dependency on credentials, private data, external access, or human taste.
 - A claim that explains a problem but sounds like the problem was fixed.
