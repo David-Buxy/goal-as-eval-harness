@@ -121,6 +121,8 @@ goal-as-eval-harness/
 ├── LICENSE
 └── goal-contract-builder/
     ├── SKILL.md
+    ├── references/
+    │   └── examples.md
     └── agents/
         └── openai.yaml
 ```
